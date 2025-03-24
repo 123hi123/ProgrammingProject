@@ -1,0 +1,1 @@
+cmd_/home/evan/CH2/seconds_module.ko := ld -r  -m elf_x86_64 -z noexecstack   --build-id=sha1  -T scripts/module.lds -o /home/evan/CH2/seconds_module.ko /home/evan/CH2/seconds_module.o /home/evan/CH2/seconds_module.mod.o;  true
