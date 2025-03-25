@@ -3,93 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TTS API测试工具</title>
+    <title>TTS API 测试</title>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f7f9fc;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
             color: #333;
         }
         .container {
-            width: 90%;
-            max-width: 600px;
             background-color: white;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 25px;
         }
         h1 {
             text-align: center;
-            color: #2d3748;
-            margin-bottom: 1.5rem;
-            font-weight: 600;
+            margin-bottom: 25px;
+            color: #2c3e50;
         }
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 20px;
         }
         label {
             display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
+            margin-bottom: 8px;
+            font-weight: 600;
             color: #4a5568;
         }
         textarea, select {
             width: 100%;
-            padding: 10px;
-            border: 1px solid #e2e8f0;
+            padding: 12px;
+            border: 1px solid #ddd;
             border-radius: 6px;
             font-size: 16px;
-            background-color: #f8fafc;
-            transition: border-color 0.3s, box-shadow 0.3s;
+            box-sizing: border-box;
         }
         textarea:focus, select:focus {
             outline: none;
             border-color: #4299e1;
-            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+            box-shadow: 0 0 0 2px rgba(66,153,225,0.2);
         }
         textarea {
-            min-height: 80px;
+            min-height: 100px;
             resize: vertical;
         }
-        .controls {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1rem;
-        }
         button {
-            flex: 1;
-            padding: 12px;
             background-color: #3182ce;
             color: white;
             border: none;
             border-radius: 6px;
+            padding: 12px 20px;
+            font-size: 16px;
             font-weight: 500;
             cursor: pointer;
-            transition: all 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
+            margin: 0 auto;
+            transition: all 0.2s;
         }
         button:hover {
             background-color: #2b6cb0;
-            transform: translateY(-1px);
         }
         button:disabled {
             background-color: #a0aec0;
             cursor: not-allowed;
-            transform: none;
         }
         .spinner {
             border: 3px solid rgba(255,255,255,0.3);
             border-radius: 50%;
             border-top: 3px solid white;
-            width: 20px;
-            height: 20px;
+            width: 16px;
+            height: 16px;
             margin-right: 10px;
             animation: spin 1s linear infinite;
             display: none;
@@ -98,17 +86,11 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        .status-container {
-            margin-top: 1.5rem;
-            padding: 0;
-            overflow: hidden;
-            border-radius: 8px;
-            max-height: 0;
-            transition: max-height 0.3s, padding 0.3s;
-        }
-        .status-container.visible {
-            padding: 1rem;
-            max-height: 200px;
+        .status-panel {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 6px;
+            display: none;
         }
         .status-success {
             background-color: #c6f6d5;
@@ -125,15 +107,9 @@
             color: #2b6cb0;
             border-left: 4px solid #4299e1;
         }
-        .status-container pre {
-            margin: 0;
-            white-space: pre-wrap;
-            font-family: monospace;
-            font-size: 14px;
-        }
         .audio-container {
-            margin-top: 1rem;
-            padding: 1rem;
+            margin-top: 20px;
+            padding: 15px;
             background-color: #edf2f7;
             border-radius: 8px;
             display: none;
@@ -141,32 +117,42 @@
         audio {
             width: 100%;
         }
-        .debug-info {
-            margin-top: 1.5rem;
-            font-size: 14px;
-            color: #718096;
-            display: none;
+        .debug-section {
+            margin-top: 30px;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 15px;
         }
         .debug-toggle {
-            text-align: center;
-            margin-top: 1rem;
-            cursor: pointer;
             color: #4299e1;
+            cursor: pointer;
             font-size: 14px;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .debug-content {
+            display: none;
+            background-color: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            overflow-x: auto;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>TTS API测试工具</h1>
+        <h1>TTS API 测试工具</h1>
         
         <div class="form-group">
-            <label for="input-text">要转换为语音的文本:</label>
-            <textarea id="input-text" placeholder="输入要转换成语音的文本...">Hello, this is a test.</textarea>
+            <label for="input-text">文本内容:</label>
+            <textarea id="input-text" placeholder="请输入要转换为语音的文本...">Hello, this is a test.</textarea>
         </div>
         
         <div class="form-group">
-            <label for="voice-select">选择语音:</label>
+            <label for="voice-select">语音选择:</label>
             <select id="voice-select">
                 <option value="alloy" selected>Alloy</option>
                 <option value="echo">Echo</option>
@@ -179,42 +165,38 @@
         
         <div class="form-group">
             <label for="instructions">语音指示 (可选):</label>
-            <textarea id="instructions" placeholder="例如: Speak in a cheerful and upbeat tone.">Speak in a cheerful and upbeat tone.</textarea>
+            <textarea id="instructions" placeholder="例如：Speak in a cheerful tone.">Speak in a cheerful and upbeat tone.</textarea>
         </div>
         
-        <div class="controls">
-            <button id="generate-button" onclick="generateSpeech()">
-                <div id="spinner" class="spinner"></div>
-                <span id="button-text">生成语音</span>
-            </button>
-        </div>
+        <button id="generate-btn" onclick="generateSpeech()">
+            <div id="spinner" class="spinner"></div>
+            <span id="btn-text">生成语音</span>
+        </button>
         
-        <div id="status-container" class="status-container">
-            <pre id="status-text"></pre>
-        </div>
+        <div id="status-panel" class="status-panel"></div>
         
         <div id="audio-container" class="audio-container">
             <audio id="audio-player" controls></audio>
         </div>
         
-        <div class="debug-toggle" onclick="toggleDebug()">显示/隐藏调试信息</div>
-        <div id="debug-info" class="debug-info"></div>
+        <div class="debug-section">
+            <div class="debug-toggle" onclick="toggleDebug()">显示/隐藏调试信息</div>
+            <div id="debug-content" class="debug-content"></div>
+        </div>
     </div>
 
     <script>
-        // 全局变量保存请求信息
-        let lastRequest = null;
-        let lastResponse = null;
+        // 全局变量用于存储请求/响应信息
+        let requestInfo = null;
+        let responseInfo = null;
         
         async function generateSpeech() {
-            const button = document.getElementById('generate-button');
+            const button = document.getElementById('generate-btn');
             const spinner = document.getElementById('spinner');
-            const buttonText = document.getElementById('button-text');
-            const statusContainer = document.getElementById('status-container');
-            const statusText = document.getElementById('status-text');
+            const btnText = document.getElementById('btn-text');
+            const statusPanel = document.getElementById('status-panel');
             const audioContainer = document.getElementById('audio-container');
             const audioPlayer = document.getElementById('audio-player');
-            const debugInfo = document.getElementById('debug-info');
             
             // 获取用户输入
             const inputText = document.getElementById('input-text').value.trim();
@@ -222,18 +204,19 @@
             const instructions = document.getElementById('instructions').value.trim();
             
             if (!inputText) {
-                showStatus('请输入要转换的文字', 'error');
+                showStatus('请输入要转换的文本内容', 'error');
                 return;
             }
             
             // 更新UI为加载状态
             button.disabled = true;
             spinner.style.display = 'inline-block';
-            buttonText.textContent = '处理中...';
+            btnText.textContent = '生成中...';
             
-            // 显示"正在请求"状态
+            // 显示请求状态
             showStatus('正在发送请求到 API...', 'pending');
             
+            // 准备请求数据
             const requestData = {
                 input: inputText,
                 voice: voice
@@ -243,19 +226,16 @@
                 requestData.instructions = instructions;
             }
             
-            // 保存请求数据用于调试
-            lastRequest = {
+            // 保存请求信息用于调试
+            requestInfo = {
                 url: 'https://ttsapi.site/v1/audio/speech',
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: requestData
             };
             
+            // 更新调试区域
             updateDebugInfo();
-            
-            // 创建一个AbortController实例，如果请求时间过长可以取消
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
             
             try {
                 const startTime = performance.now();
@@ -265,15 +245,14 @@
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(requestData),
-                    signal: controller.signal
+                    body: JSON.stringify(requestData)
                 });
                 
                 const endTime = performance.now();
                 const responseTime = Math.round(endTime - startTime);
                 
-                // 保存响应信息
-                lastResponse = {
+                // 收集响应信息
+                responseInfo = {
                     status: response.status,
                     statusText: response.statusText,
                     headers: Object.fromEntries([...response.headers]),
@@ -282,47 +261,43 @@
                 
                 if (response.ok) {
                     try {
-                        // 获取内容类型
-                        const contentType = response.headers.get('Content-Type');
-                        
-                        // 尝试获取响应内容
                         const blob = await response.blob();
                         
                         if (blob.size > 0) {
-                            // 成功获取到音频数据
+                            // 成功获取音频数据
                             const audioUrl = URL.createObjectURL(blob);
                             audioPlayer.src = audioUrl;
                             audioContainer.style.display = 'block';
                             
-                            showStatus(`✅ 请求成功! 收到 ${formatBytes(blob.size)} 的音频数据\n响应时间: ${responseTime}ms`, 'success');
+                            showStatus(`✅ 请求成功！接收到 ${formatFileSize(blob.size)} 的音频数据<br>响应时间: ${responseTime}ms`, 'success');
                             
-                            lastResponse.blobSize = formatBytes(blob.size);
+                            responseInfo.blobSize = formatFileSize(blob.size);
+                            responseInfo.blobType = blob.type;
                         } else {
                             // 响应成功但没有数据
                             showStatus(`⚠️ 服务器返回了空响应 (HTTP ${response.status})`, 'error');
                             audioContainer.style.display = 'none';
                         }
                     } catch (parseError) {
-                        console.error('Parse error:', parseError);
-                        showStatus(`⚠️ 响应解析错误: ${parseError.message}`, 'error');
+                        showStatus(`❌ 响应解析错误: ${parseError.message}`, 'error');
                         audioContainer.style.display = 'none';
                     }
                 } else {
                     // HTTP错误
                     try {
                         const errorText = await response.text();
-                        let errorMessage = `❌ 请求失败 (HTTP ${response.status}): ${response.statusText}`;
+                        let errorMessage = `❌ 请求失败 (HTTP ${response.status}: ${response.statusText})`;
                         
                         try {
                             // 尝试解析JSON错误
                             const errorJson = JSON.parse(errorText);
-                            errorMessage += `\n\n详细信息: ${JSON.stringify(errorJson, null, 2)}`;
-                            lastResponse.error = errorJson;
+                            errorMessage += `<br><pre>${JSON.stringify(errorJson, null, 2)}</pre>`;
+                            responseInfo.error = errorJson;
                         } catch {
-                            // 如果无法解析为JSON，直接显示错误文本
+                            // 如果不是JSON，直接显示错误文本
                             if (errorText) {
-                                errorMessage += `\n\n${errorText}`;
-                                lastResponse.error = errorText;
+                                errorMessage += `<br><pre>${errorText}</pre>`;
+                                responseInfo.error = errorText;
                             }
                         }
                         
@@ -338,89 +313,78 @@
                 
                 let errorMessage = '❌ 请求失败';
                 
-                if (error.name === 'AbortError') {
-                    errorMessage = '❌ 请求超时 (30秒)';
-                    lastResponse = { error: 'Request timeout after 30 seconds' };
+                if (error.message.includes('NetworkError') || error.message.includes('Failed to fetch')) {
+                    errorMessage = '❌ 网络错误: 无法连接到API服务器';
                 } else {
                     errorMessage += `: ${error.message}`;
-                    lastResponse = { error: error.message };
-                    
-                    // 针对CORS错误提供更详细的解释
-                    if (error.message.includes('CORS') || error.message.includes('cross-origin')) {
-                        errorMessage += '\n\n这可能是CORS策略问题，API服务器可能不允许从浏览器直接访问。';
-                    }
                 }
                 
+                // 针对CORS错误提供更详细的解释
+                if (error.message.includes('CORS') || error.message.includes('cross-origin')) {
+                    errorMessage += '<br><br>这可能是CORS跨域策略问题，API服务器可能不允许从浏览器直接访问。';
+                    errorMessage += '<br>尝试通过后端服务器中转调用或联系API提供者启用CORS。';
+                }
+                
+                responseInfo = { error: error.message };
                 showStatus(errorMessage, 'error');
                 audioContainer.style.display = 'none';
             } finally {
-                // 清除超时定时器
-                clearTimeout(timeoutId);
-                
                 // 恢复按钮状态
                 button.disabled = false;
                 spinner.style.display = 'none';
-                buttonText.textContent = '生成语音';
+                btnText.textContent = '生成语音';
                 
+                // 更新调试信息
                 updateDebugInfo();
             }
         }
         
         function showStatus(message, type) {
-            const statusContainer = document.getElementById('status-container');
-            const statusText = document.getElementById('status-text');
+            const statusPanel = document.getElementById('status-panel');
             
-            // 移除所有类型
-            statusContainer.classList.remove('status-success', 'status-error', 'status-pending');
+            // 移除所有状态类
+            statusPanel.classList.remove('status-success', 'status-error', 'status-pending');
             
-            // 添加新类型
-            statusContainer.classList.add(`status-${type}`);
-            statusContainer.classList.add('visible');
+            // 添加对应类型
+            statusPanel.classList.add(`status-${type}`);
             
-            // 设置消息
-            statusText.textContent = message;
+            // 设置消息内容和显示
+            statusPanel.innerHTML = message;
+            statusPanel.style.display = 'block';
         }
         
         function updateDebugInfo() {
-            const debugInfo = document.getElementById('debug-info');
+            const debugContent = document.getElementById('debug-content');
             let debugText = '';
             
-            if (lastRequest) {
-                debugText += '--- 请求信息 ---\n';
-                debugText += `URL: ${lastRequest.url}\n`;
-                debugText += `方法: ${lastRequest.method}\n`;
-                debugText += `请求头: ${JSON.stringify(lastRequest.headers, null, 2)}\n`;
-                debugText += `请求体: ${JSON.stringify(lastRequest.body, null, 2)}\n\n`;
+            if (requestInfo) {
+                debugText += '== 请求信息 ==\n';
+                debugText += `URL: ${requestInfo.url}\n`;
+                debugText += `方法: ${requestInfo.method}\n`;
+                debugText += `请求头: ${JSON.stringify(requestInfo.headers, null, 2)}\n`;
+                debugText += `请求体: ${JSON.stringify(requestInfo.body, null, 2)}\n\n`;
             }
             
-            if (lastResponse) {
-                debugText += '--- 响应信息 ---\n';
-                debugText += JSON.stringify(lastResponse, null, 2);
+            if (responseInfo) {
+                debugText += '== 响应信息 ==\n';
+                debugText += JSON.stringify(responseInfo, null, 2);
             }
             
-            debugInfo.innerHTML = `<pre>${debugText}</pre>`;
+            debugContent.textContent = debugText;
         }
         
         function toggleDebug() {
-            const debugInfo = document.getElementById('debug-info');
-            if (debugInfo.style.display === 'block') {
-                debugInfo.style.display = 'none';
-            } else {
-                debugInfo.style.display = 'block';
-                updateDebugInfo();
-            }
+            const debugContent = document.getElementById('debug-content');
+            debugContent.style.display = debugContent.style.display === 'block' ? 'none' : 'block';
         }
         
-        function formatBytes(bytes, decimals = 2) {
+        function formatFileSize(bytes) {
             if (bytes === 0) return '0 Bytes';
             
-            const k = 1024;
-            const dm = decimals < 0 ? 0 : decimals;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+            const units = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(1024));
             
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+            return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + units[i];
         }
     </script>
 </body>
