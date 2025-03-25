@@ -30,6 +30,18 @@
             padding: 10px;
             margin-bottom: 10px;
         }
+        #status {
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+            min-height: 100px;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+        }
+        .error {
+            color: red;
+        }
     </style>
 </head>
 <body>
@@ -51,43 +63,119 @@
     
     <button onclick="generateSpeech()">Generate Speech</button>
     
-    <div id="status"></div>
+    <div>
+        <h3>Status and Debug Information:</h3>
+        <div id="status"></div>
+    </div>
 
     <script>
+        // 添加一個函數來顯示詳細的狀態信息
+        function updateStatus(message, isError = false) {
+            const statusDiv = document.getElementById('status');
+            const timestamp = new Date().toISOString();
+            
+            if (isError) {
+                statusDiv.innerHTML += `<p class="error">[${timestamp}] ERROR: ${message}</p>`;
+            } else {
+                statusDiv.innerHTML += `<p>[${timestamp}] ${message}</p>`;
+            }
+        }
+
+        // 添加一個函數來顯示請求和響應的詳細信息
+        function logRequestDetails(url, options) {
+            const requestInfo = {
+                url: url,
+                method: options.method,
+                headers: options.headers,
+                body: JSON.parse(options.body)
+            };
+            updateStatus(`Request details: ${JSON.stringify(requestInfo, null, 2)}`);
+        }
+
         async function generateSpeech() {
             const textInput = document.getElementById('textInput').value;
             const voiceSelect = document.getElementById('voiceSelect').value;
-            const statusDiv = document.getElementById('status');
             
-            statusDiv.textContent = "Generating speech...";
+            // 清除舊的狀態信息
+            document.getElementById('status').innerHTML = '';
+            updateStatus("Starting speech generation process...");
+            updateStatus(`Page origin: ${window.location.origin}`);
+            
+            // API endpoint
+            const apiUrl = 'https://ttsapi.site/v1/audio/speech';
+            
+            // 準備請求選項
+            const options = {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    input: textInput,
+                    voice: voiceSelect,
+                    instructions: 'Speak in a cheerful and upbeat tone.'
+                })
+            };
+            
+            // 記錄請求詳細信息
+            logRequestDetails(apiUrl, options);
             
             try {
-                const response = await fetch('https://ttsapi.site/v1/audio/speech', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        input: textInput,
-                        voice: voiceSelect,
-                        instructions: 'Speak in a cheerful and upbeat tone.'  // Optional
-                    })
+                updateStatus("Sending fetch request...");
+                const response = await fetch(apiUrl, options);
+                
+                // 記錄響應狀態
+                updateStatus(`Response received. Status: ${response.status} ${response.statusText}`);
+                
+                // 顯示響應頭信息
+                const headers = {};
+                response.headers.forEach((value, key) => {
+                    headers[key] = value;
                 });
+                updateStatus(`Response headers: ${JSON.stringify(headers, null, 2)}`);
 
                 if (response.ok) {
-                    // Always MP3 format regardless of Content-Type header
-                    const blob = await response.blob();
-                    const audio = new Audio(URL.createObjectURL(blob));
-                    audio.play();
-                    statusDiv.textContent = "Speech played successfully!";
+                    updateStatus("Response OK. Attempting to process audio data...");
+                    try {
+                        const blob = await response.blob();
+                        updateStatus(`Blob created: size=${blob.size}, type=${blob.type}`);
+                        
+                        const audioUrl = URL.createObjectURL(blob);
+                        updateStatus(`Audio URL created: ${audioUrl}`);
+                        
+                        const audio = new Audio(audioUrl);
+                        
+                        audio.onplay = () => updateStatus("Audio playback started");
+                        audio.onended = () => updateStatus("Audio playback completed");
+                        audio.onerror = (e) => updateStatus(`Audio playback error: ${e.message}`, true);
+                        
+                        audio.play()
+                            .then(() => updateStatus("Audio play() promise resolved"))
+                            .catch(err => updateStatus(`Audio play() promise rejected: ${err}`, true));
+                    } catch (blobError) {
+                        updateStatus(`Error processing audio data: ${blobError.message}`, true);
+                        console.error('Blob processing error:', blobError);
+                    }
                 } else {
-                    const error = await response.json();
-                    console.error('Error:', error);
-                    statusDiv.textContent = `Error: ${JSON.stringify(error)}`;
+                    try {
+                        const errorData = await response.text();
+                        updateStatus(`API returned error. Response body: ${errorData}`, true);
+                        try {
+                            const jsonError = JSON.parse(errorData);
+                            updateStatus(`Parsed error: ${JSON.stringify(jsonError)}`, true);
+                        } catch (jsonError) {
+                            updateStatus("Response wasn't valid JSON", true);
+                        }
+                    } catch (textError) {
+                        updateStatus(`Failed to read error response: ${textError.message}`, true);
+                    }
                 }
-            } catch (error) {
-                console.error('Exception:', error);
-                statusDiv.textContent = `Exception: ${error.message}`;
+            } catch (fetchError) {
+                // 這裡將捕獲網絡錯誤，包括CORS錯誤
+                updateStatus(`Fetch error: ${fetchError.message}`, true);
+                updateStatus("This error might be caused by CORS restrictions if you're hosting on GitHub Pages", true);
+                updateStatus("Check browser console for more details (Press F12 > Console tab)", true);
+                console.error('Fetch error details:', fetchError);
             }
         }
     </script>
