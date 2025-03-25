@@ -4,68 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TTS API Test</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0;
-        }
-        .container {
-            text-align: center;
-            background-color: white;
-            padding: 2rem;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-    </style>
 </head>
 <body>
-    <div class="container">
-        <h1>TTS API Test</h1>
-        <button onclick="generateSpeech()">Generate Speech</button>
-    </div>
+    <h1>TTS API Test</h1>
+    <input type="text" id="inputText" placeholder="Enter text to convert">
+    <button onclick="convertToSpeech()">Convert to Speech</button>
+    <audio id="audio" controls style="display:none;"></audio>
 
     <script>
-        async function generateSpeech() {
-            const response = await fetch('https://ttsapi.site/v1/audio/speech', {
+        function convertToSpeech() {
+            const inputText = document.getElementById('inputText').value;
+            const url = "https://ttsapi.site/v1/audio/speech";
+            const data = {
+                "input": inputText,
+                "voice": "alloy",
+                "instructions": "Speak in a cheerful and upbeat tone."
+            };
+
+            fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({
-                    input: 'Hello, this is a test.',
-                    voice: 'alloy',
-                    instructions: 'Speak in a cheerful and upbeat tone.'  // Optional
-                })
-            });
-
-            if (response.ok) {
-                // Always MP3 format regardless of Content-Type header
-                const blob = await response.blob();
-                const audio = new Audio(URL.createObjectURL(blob));
-                audio.play();
-            } else {
-                const error = await response.json();
-                console.error('Error:', error);
-                alert('An error occurred. Please check the console for details.');
-            }
+                body: JSON.stringify(data)
+            })
+            .then(response => response.blob())
+            .then(blob => {
+                const audioUrl = URL.createObjectURL(blob);
+                const audioElement = document.getElementById('audio');
+                audioElement.src = audioUrl;
+                audioElement.style.display = 'block';
+            })
+            .catch(error => console.error('Error:', error));
         }
     </script>
 </body>
